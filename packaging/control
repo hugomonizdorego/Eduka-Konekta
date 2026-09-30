@@ -1,17 +1,21 @@
 Package: eduka-konekta
-Version: 0.0.6
+Version: 0.1.0
 Section: net
 Priority: optional
 Architecture: all
-Depends: python3 (>= 3.11), python3-gi, gir1.2-gtk-3.0, python3-cryptography, ffmpeg, iproute2, v4l-utils, pulseaudio-utils
+Depends: python3 (>= 3.11), python3-gi, gir1.2-gtk-3.0, librsvg2-common, python3-cryptography, ffmpeg, iproute2, v4l-utils, pulseaudio-utils
 Recommends: adwaita-icon-theme, fonts-noto-core
 Maintainer: Hugo Moniz do Rego <grupoideatl@gmail.com>
 Homepage: https://edukasaunos.tl
-Description: lightweight peer-to-peer group chat for schools
- Eduka-Konekta connects teachers and students directly over IP without a
- central chat server. It provides signed persistent device identities, LAN
- discovery across Ethernet and Wi-Fi interfaces, refresh and bounded subnet
- probing, direct and teacher-managed group chat, 30-minute message controls,
- document transfer, status feed, desktop notifications, profile photos,
- webcam video and microphone voice recording. Chat data is erased on close;
- the active profile remains signed in until the user logs out.
+Description: peer-to-peer school messenger with exams and attendance
+ Eduka-Konekta connects teachers and students directly over the school
+ network without internet or a central server. It works over Wi-Fi and LAN
+ cable (also mixed), bridges Wi-Fi client isolation through any reachable
+ peer, and detects dropped Wi-Fi links automatically.
+ .
+ Features: class, school, teacher, group and private chat; announcements;
+ exams and assignments (question files, multiple choice with automatic
+ grading, essays, answer files, results and CSV export); one-click
+ attendance; configurable school rules, room locks, exam mode and a word
+ filter; photos, voice, video and documents; status feed; notifications.
+ Interface in Indonesian, Tetum, Portuguese (Portugal and Brazil) and English.

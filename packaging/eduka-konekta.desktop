@@ -2,17 +2,20 @@
 Type=Application
 Version=1.0
 Name=Eduka-Konekta
-GenericName=School Group Messenger
-GenericName[id]=Pesan Grup Sekolah
-GenericName[tet]=Mensajen Grupu Eskola
-Comment=Peer-to-peer group chat for schools
-Comment[id]=Chat grup peer-to-peer untuk sekolah
-Comment[tet]=Chat grupu peer-to-peer ba eskola
+GenericName=School Messenger, Exams & Attendance
+GenericName[id]=Chat, Ujian & Absensi Sekolah
+GenericName[tet]=Chat, Ezame no Prezensa Eskola
+GenericName[pt]=Conversas, Exames e Presenças
+GenericName[pt_BR]=Conversas, Provas e Chamada
+Comment=School chat, exams, assignments and attendance over Wi-Fi or LAN
+Comment[id]=Chat sekolah, ujian, tugas, dan absensi lewat Wi-Fi atau LAN
+Comment[tet]=Chat eskola, ezame, tarefa no prezensa liuhusi Wi-Fi ka LAN
+Comment[pt]=Conversas, exames, trabalhos e presenças por Wi-Fi ou LAN
 Exec=eduka-konekta
 Icon=tl.edukasaun.EdukaKonekta
 Terminal=false
 Categories=Network;Chat;Education;
-Keywords=school;chat;education;LAN;P2P;
+Keywords=school;chat;education;LAN;WiFi;P2P;exam;attendance;sekolah;ujian;absensi;
 StartupNotify=true
 StartupWMClass=tl.edukasaun.EdukaKonekta
 

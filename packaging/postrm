@@ -3,5 +3,16 @@ set -e
 if command -v gtk-update-icon-cache >/dev/null 2>&1; then
     gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
 fi
+if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
+    if command -v firewall-cmd >/dev/null 2>&1 && firewall-cmd --state >/dev/null 2>&1; then
+        for zone in $(firewall-cmd --get-zones 2>/dev/null); do
+            firewall-cmd --permanent --zone="$zone" --remove-service=eduka-konekta >/dev/null 2>&1 || true
+        done
+        firewall-cmd --reload >/dev/null 2>&1 || true
+    fi
+    if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q "Status: active"; then
+        ufw delete allow 45901/tcp >/dev/null 2>&1 || true
+        ufw delete allow 45900/udp >/dev/null 2>&1 || true
+    fi
+fi
 exit 0
-

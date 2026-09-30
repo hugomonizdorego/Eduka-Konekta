@@ -2,7 +2,7 @@
 
 APP_ID = "tl.edukasaun.EdukaKonekta"
 APP_NAME = "Eduka-Konekta"
-VERSION = "0.0.6"
+VERSION = "0.1.0"
 CHANNEL = "Alpha"
 TCP_PORT = 45901
 DISCOVERY_PORT = 45900

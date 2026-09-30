@@ -1,3 +1,35 @@
+Eduka-Konekta (0.1.0 Alpha) — 2026-09-30
+
+- Fixed peers not being found over Wi-Fi while LAN cable worked: Wi-Fi friendly
+  non-blocking subnet sweep (1.5 s timeout, up to 1024 hosts on large Wi-Fi
+  networks), interfaces re-read every 12 s so late Wi-Fi connections and DHCP
+  changes are announced, unicast UDP discovery with replies, and multicast
+  re-joined on new interfaces.
+- Added signed presence heartbeats, TCP keep-alive and dead-link detection so
+  peers reconnect after Wi-Fi sleep or roaming.
+- Added automatic one-hop relay through any mutually reachable peer, which
+  bridges access-point client isolation; relayed users are marked in the list.
+- Added per-connection writer queues and relay only to peers the sender cannot
+  reach, removing duplicate floods on Wi-Fi.
+- Added firewalld service and ufw profile; the installer opens TCP 45901 and
+  UDP 45900 when a firewall is active.
+- Added Exams & Assignments: question editor (multiple choice with automatic
+  grading, essay), question files, class/all/selected targets, time limits,
+  late marking, exam mode chat lock, answer files, store-and-forward delivery
+  with receipts, review and grading dialog, results returned to students, CSV
+  export and bulk answer-file export. Records persist on disk.
+- Added one-click attendance with CSV export.
+- Added school usage rules (accepted at sign-in), teacher-published school
+  rules, teacher room locks, offensive-word filter and anti-spam rate limit.
+- Redesigned the interface: navigation rail, top bar, room descriptions and
+  unread counters, people search, initials avatars, toasts, network
+  diagnostics page and settings page (language, large text, notifications,
+  word filter).
+- Rewrote the translation catalog so every string exists in Indonesian, Tetun,
+  Portuguese (Portugal and Brazil) and English, with tests that enforce it.
+- The logo no longer crashes the application when no SVG loader is installed;
+  librsvg2-common is now a dependency.
+
 Eduka-Konekta (0.0.6 Alpha) — 2026-09-04
 
 - Expanded automatic discovery to all active Ethernet, Wi-Fi, and other IPv4

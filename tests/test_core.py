@@ -20,8 +20,19 @@ from eduka_konekta.models import (
     validate_status_payload,
     verify_signature,
 )
-from eduka_konekta.network import P2PNetwork, decode_packet, encode_frame, local_ipv4_info
+from eduka_konekta.moderation import RateLimiter, filter_text, parse_word_list
+from eduka_konekta.network import P2PNetwork, decode_packet, encode_frame, local_ipv4_info, subnet_hosts
+from eduka_konekta.school import SchoolManager, grade_answers, validate_school_payload
 from eduka_konekta.storage import Storage
+
+
+def wait_until(predicate, timeout=5.0):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if predicate():
+            return True
+        time.sleep(0.02)
+    return predicate()
 
 
 def profile(name="Maria da Silva", role="student"):
@@ -180,7 +191,8 @@ class StatusAndDeviceTests(unittest.TestCase):
             self.assertEqual("voice-1.ogg", manager.capture_path("voice", ".ogg").name)
 
     def test_all_media_choosers_use_standard_gtk_dialog(self):
-        source = (Path(__file__).parents[1] / "src/eduka_konekta/ui.py").read_text(encoding="utf-8")
+        package = Path(__file__).parents[1] / "src/eduka_konekta"
+        source = (package / "ui.py").read_text(encoding="utf-8") + (package / "ui_school.py").read_text(encoding="utf-8")
         self.assertNotIn("Gtk.FileChooserNative", source)
         self.assertIn("Gtk.FileChooserDialog", source)
         self.assertIn("_choose_status_image", source)
@@ -197,6 +209,42 @@ class TranslationTests(unittest.TestCase):
             self.assertIn(language, CATALOGS)
             for key in ("sign_in", "all_schools", "send", "about", "network_warning", "logout", "students_online", "upload_document"):
                 self.assertNotEqual(key, tr(language, key))
+
+    def test_every_interface_key_is_translated_in_every_language(self):
+        import re
+        package = Path(__file__).parents[1] / "src/eduka_konekta"
+        source = "".join((package / name).read_text(encoding="utf-8") for name in ("ui.py", "ui_school.py"))
+        keys = set(re.findall(r'self\.t\("([a-z0-9_]+)"\)', source))
+        keys |= set(re.findall(r"self\.t\('([a-z0-9_]+)'\)", source))
+        self.assertGreater(len(keys), 150)
+        for language, catalog in CATALOGS.items():
+            missing = sorted(key for key in keys if key not in catalog)
+            self.assertEqual([], missing, f"{language} is missing translations")
+            self.assertEqual(set(EN), set(catalog), f"{language} catalog keys differ from English")
+
+    def test_placeholders_match_between_languages(self):
+        import re
+        for key, english in EN.items():
+            expected = set(re.findall(r"{(\w+)}", english))
+            for language, catalog in CATALOGS.items():
+                self.assertEqual(expected, set(re.findall(r"{(\w+)}", catalog[key])), f"{language}:{key}")
+
+
+class ModerationTests(unittest.TestCase):
+    def test_word_filter_masks_whole_words_only(self):
+        self.assertEqual("dasar b******", filter_text("dasar bangsat"))
+        self.assertEqual("jangan B****** ya", filter_text("jangan BANGSAT ya"))
+        self.assertEqual("pelajaran klasik", filter_text("pelajaran klasik"))
+        self.assertEqual("ini s***** kelas", filter_text("ini sampah kelas", ["sampah"]))
+        self.assertEqual(["kasar", "jelek"], parse_word_list("Kasar, jelek; kasar"))
+
+    def test_rate_limiter_blocks_spam(self):
+        now = [0.0]
+        limiter = RateLimiter(limit=3, window=10, clock=lambda: now[0])
+        self.assertTrue(all(limiter.allow() for _ in range(3)))
+        self.assertFalse(limiter.allow())
+        now[0] = 11
+        self.assertTrue(limiter.allow())
 
 
 class NetworkTests(unittest.TestCase):
@@ -424,6 +472,223 @@ class NetworkTests(unittest.TestCase):
                 self.assertEqual([], network_b.peers())
             finally:
                 network_a.stop(); network_b.stop()
+
+    def test_wifi_client_isolation_is_bridged_by_a_relay_peer(self):
+        """A and B cannot reach each other (AP isolation) but both reach H (wired)."""
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            ids = [Identity.load_or_create(root / f"relay-{name}.json") for name in "ahb"]
+            names = ["Ana Pereira", "Hugo Moniz", "Beto Soares"]
+            inbox = [[], [], []]
+            networks = []
+            for index in range(3):
+                network = P2PNetwork(
+                    ids[index], profile(names[index], "teacher" if index == 1 else "student"),
+                    lambda message, i=index: inbox[i].append(message), lambda _peers: None,
+                    tcp_port=0, enable_discovery=False,
+                )
+                network.local_ips = []  # no gossiped addresses: A and B stay isolated
+                networks.append(network)
+            a, hub, b = networks
+            try:
+                for network in networks:
+                    network.start()
+                a.connect_ip("127.0.0.1", hub.tcp_port)
+                b.connect_ip("127.0.0.1", hub.tcp_port)
+                self.assertTrue(wait_until(lambda: any(peer.user_id == ids[2].user_id for peer in a.peers())), "A never learned about B through the relay")
+                self.assertTrue(wait_until(lambda: any(peer.user_id == ids[0].user_id for peer in b.peers())), "B never learned about A through the relay")
+                seen_b = next(peer for peer in a.peers() if peer.user_id == ids[2].user_id)
+                self.assertFalse(seen_b.direct)
+                self.assertEqual(ids[1].user_id, seen_b.via)
+
+                private_id = uuid.uuid4().hex
+                room = "direct:" + ":".join(sorted((ids[0].user_id, ids[2].user_id)))
+                a.send_chat({
+                    "msg_id": private_id, "room_id": room, "timestamp": time.time(),
+                    "profile": profile(names[0]).public(include_photo=False), "kind": "text", "text": "Via relay",
+                }, [ids[2].user_id])
+                self.assertTrue(wait_until(lambda: any(m["msg_id"] == private_id for m in inbox[2])), "private message did not cross the relay")
+                self.assertEqual([], [m for m in inbox[1] if m["msg_id"] == private_id], "relay must not deliver a message addressed to someone else")
+
+                public_id = uuid.uuid4().hex
+                b.send_chat({
+                    "msg_id": public_id, "room_id": "all-schools", "timestamp": time.time(),
+                    "profile": profile(names[2]).public(include_photo=False), "kind": "text", "text": "Hello everyone",
+                })
+                self.assertTrue(wait_until(lambda: any(m["msg_id"] == public_id for m in inbox[0])), "room message did not cross the relay")
+                self.assertTrue(wait_until(lambda: any(m["msg_id"] == public_id for m in inbox[1])))
+                time.sleep(0.3)
+                self.assertEqual(1, len([m for m in inbox[0] if m["msg_id"] == public_id]), "duplicate delivery")
+
+                b.stop()
+                self.assertTrue(wait_until(lambda: all(peer.user_id != ids[2].user_id for peer in a.peers()), 6), "relayed peer did not expire after leaving")
+            finally:
+                for network in networks:
+                    network.stop()
+
+    def test_full_mesh_does_not_duplicate_room_messages(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            ids = [Identity.load_or_create(root / f"mesh-{i}.json") for i in range(3)]
+            names = ["Ana Pereira", "Beto Soares", "Carla Costa"]
+            inbox = [[], [], []]
+            networks = [
+                P2PNetwork(ids[i], profile(names[i]), lambda m, i=i: inbox[i].append(m), lambda _p: None, tcp_port=0, enable_discovery=False)
+                for i in range(3)
+            ]
+            try:
+                for network in networks:
+                    network.local_ips = []
+                    network.start()
+                networks[0].connect_ip("127.0.0.1", networks[1].tcp_port)
+                networks[0].connect_ip("127.0.0.1", networks[2].tcp_port)
+                networks[1].connect_ip("127.0.0.1", networks[2].tcp_port)
+                self.assertTrue(wait_until(lambda: all(len([p for p in n.peers() if p.direct]) == 2 for n in networks)))
+                time.sleep(1.5)  # let presence (direct-peer lists) propagate
+                message_id = uuid.uuid4().hex
+                networks[0].send_chat({
+                    "msg_id": message_id, "room_id": "all-schools", "timestamp": time.time(),
+                    "profile": profile(names[0]).public(include_photo=False), "kind": "text", "text": "Once",
+                })
+                self.assertTrue(wait_until(lambda: inbox[1] and inbox[2]))
+                time.sleep(0.3)
+                self.assertEqual(1, len(inbox[1]))
+                self.assertEqual(1, len(inbox[2]))
+            finally:
+                for network in networks:
+                    network.stop()
+
+    def test_subnet_scan_covers_large_wifi_networks(self):
+        hosts = subnet_hosts("10.5.6.20", "10.5.4.0/22", 1024)
+        self.assertIn("10.5.6.1", hosts)
+        self.assertIn("10.5.4.9", hosts)
+        self.assertIn("10.5.7.200", hosts)
+        self.assertNotIn("10.5.6.20", hosts)
+        self.assertEqual("10.5.6.1", hosts[0], "own /24 must be scanned first")
+        big = subnet_hosts("172.16.9.9", "172.16.0.0/16", 600)
+        self.assertEqual(600, len(big))
+        self.assertTrue(all(ipaddress_in(host, "172.16.0.0/16") for host in big))
+
+
+def ipaddress_in(host, network):
+    import ipaddress
+    return ipaddress.ip_address(host) in ipaddress.ip_network(network)
+
+
+class SchoolTests(unittest.TestCase):
+    def test_grading_and_payload_validation(self):
+        questions = [
+            {"qid": "q1", "type": "choice", "options": ["a", "b"], "points": 2},
+            {"qid": "q2", "type": "choice", "options": ["a", "b"], "points": 1},
+            {"qid": "q3", "type": "essay"},
+        ]
+        result = grade_answers(questions, {"q1": 1, "q2": 0}, {"q1": 1, "q2": 1, "q3": "text"})
+        self.assertEqual((1, 2, 2.0, 3.0, 1), (result["correct"], result["total"], result["points"], result["max_points"], result["essays"]))
+        self.assertFalse(validate_school_payload({"kind": "exam_submit", "exam_id": "x", "submission_id": "s", "answers": "bad"}))
+        self.assertFalse(validate_school_payload({"kind": "unknown"}))
+        self.assertTrue(validate_school_payload({"kind": "room_lock", "room_id": "school:x", "locked": True}))
+
+    def test_exam_attendance_and_rules_flow_over_the_network(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            teacher_id = Identity.load_or_create(root / "exam-teacher.json")
+            student_id = Identity.load_or_create(root / "exam-student.json")
+            teacher_profile = profile("Rita Belo", "teacher")
+            student_profile = profile("Maria da Silva")
+            holders = {}
+
+            def make(identity, prof, key):
+                network = P2PNetwork(
+                    identity, prof, lambda _m: None,
+                    lambda peers, k=key: holders[k].set_peers(peers),
+                    tcp_port=0, enable_discovery=False,
+                    on_school=lambda event, k=key: holders[k].handle(event),
+                )
+                network.local_ips = []
+                holders[key] = SchoolManager(root / key, identity.user_id, lambda p=prof: p, network.send_school)
+                return network
+
+            teacher_net = make(teacher_id, teacher_profile, "teacher")
+            student_net = make(student_id, student_profile, "student")
+            teacher, student = holders["teacher"], holders["student"]
+            questions_file = root / "soal.pdf"
+            questions_file.write_bytes(b"%PDF-1.4 soal ujian")
+            answer_file = root / "jawaban.odt"
+            answer_file.write_bytes(b"jawaban siswa")
+            try:
+                teacher_net.start(); student_net.start()
+                # The exam is created while the student is offline (store-and-forward).
+                exam = teacher.create_exam(
+                    "exam", "Ulangan Matematika", "Matematika", "Kerjakan sendiri.",
+                    {"mode": "class", "school_class": "10a"}, 30,
+                    [
+                        {"qid": "q1", "type": "choice", "text": "2+2?", "options": ["3", "4", "5"]},
+                        {"qid": "q2", "type": "essay", "text": "Jelaskan.", "points": 5},
+                    ],
+                    {"q1": 1}, lock_chat=True, question_file=questions_file,
+                )
+                exam_id = exam["exam_id"]
+                student_net.connect_ip("127.0.0.1", teacher_net.tcp_port)
+                self.assertTrue(wait_until(lambda: exam_id in student.exams), "offline student did not receive the exam")
+                received = student.exams[exam_id]
+                self.assertNotIn("answer_key", received, "answer key leaked to the student")
+                self.assertEqual("student", received["role"])
+                self.assertIsNotNone(student.chat_locked(), "exam mode did not lock student chat")
+                self.assertTrue(wait_until(lambda: student_id.user_id in teacher.exams[exam_id]["delivered_to"]))
+
+                self.assertTrue(student.request_exam_file(exam_id))
+                self.assertTrue(wait_until(lambda: Path(student.exams[exam_id]["file"].get("path", "/nonexistent")).exists()))
+                self.assertEqual(b"%PDF-1.4 soal ujian", Path(student.exams[exam_id]["file"]["path"]).read_bytes())
+
+                student.submit_exam(exam_id, {"q1": 1, "q2": "Karena dua tambah dua."}, answer_file)
+                self.assertTrue(wait_until(lambda: student_id.user_id in teacher.submissions.get(exam_id, {})))
+                row = teacher.submissions[exam_id][student_id.user_id]
+                self.assertEqual((1, 1), (row["auto"]["correct"], row["auto"]["total"]))
+                self.assertFalse(row["late"])
+                self.assertEqual(b"jawaban siswa", Path(row["file"]["path"]).read_bytes())
+                self.assertTrue(wait_until(lambda: student.exams[exam_id]["submission"]["acked"]), "submission receipt not delivered")
+
+                teacher.return_result(exam_id, student_id.user_id, "95", "Bagus sekali")
+                self.assertTrue(wait_until(lambda: student.exams[exam_id].get("result", {}).get("score") == "95"))
+                csv_path = teacher.export_results_csv(exam_id, root / "hasil.csv")
+                self.assertIn("Maria da Silva", csv_path.read_text(encoding="utf-8-sig"))
+                self.assertEqual(1, teacher.copy_answer_files(exam_id, root / "answers"))
+
+                teacher.close_exam(exam_id)
+                self.assertTrue(wait_until(lambda: student.exams[exam_id].get("closed")))
+                self.assertIsNone(student.chat_locked())
+                with self.assertRaises(PermissionError):
+                    student.submit_exam(exam_id, {"q1": 0})
+
+                session = teacher.open_attendance("Absensi pagi", "10A", 5)
+                self.assertTrue(wait_until(lambda: session["session_id"] in student.attendance))
+                self.assertTrue(student.mark_present(session["session_id"]))
+                self.assertTrue(wait_until(lambda: student_id.user_id in teacher.attendance[session["session_id"]]["present"]))
+                self.assertTrue(wait_until(lambda: student.attendance[session["session_id"]].get("acked")))
+
+                teacher.publish_rules("Dilarang menyontek.")
+                self.assertTrue(wait_until(lambda: student.rules.get("text") == "Dilarang menyontek."))
+                teacher.set_room_lock("school:escola-central-dili", True)
+                self.assertTrue(wait_until(lambda: student.room_locked("school:escola-central-dili")))
+
+                # Records survive a restart of the application.
+                reloaded = SchoolManager(root / "teacher", teacher_id.user_id, lambda: teacher_profile, lambda *_: None)
+                self.assertEqual("95", reloaded.submissions[exam_id][student_id.user_id]["score"])
+            finally:
+                teacher_net.stop(); student_net.stop()
+
+    def test_students_cannot_publish_exams_or_rules(self):
+        with tempfile.TemporaryDirectory() as folder:
+            manager = SchoolManager(Path(folder), "EK-ME", lambda: profile("Maria da Silva"), lambda *_: None)
+            fake_teacher = profile("Beto Soares").public(include_photo=False)  # role student
+            self.assertIsNone(manager.handle({
+                "kind": "exam_publish", "sender_id": "EK-X", "profile": fake_teacher,
+                "exam": {"exam_id": "e1", "kind": "exam", "title": "Fake", "teacher_id": "EK-X", "questions": []},
+            }))
+            self.assertIsNone(manager.handle({"kind": "rules", "rules_id": "r", "text": "x", "sender_id": "EK-X", "profile": fake_teacher}))
+            self.assertEqual({}, manager.exams)
+            with self.assertRaises(PermissionError):
+                manager.create_exam("exam", "t", "s", "", {"mode": "all"}, 0, [], {})
 
 
 if __name__ == "__main__":

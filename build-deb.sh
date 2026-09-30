@@ -2,7 +2,8 @@
 set -eu
 
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-STAGE="$ROOT/build/eduka-konekta_0.0.6_all"
+VERSION=$(sed -n 's/^Version: //p' "$ROOT/packaging/control")
+STAGE="$ROOT/build/eduka-konekta_${VERSION}_all"
 OUTPUT=${1:-"$ROOT/../dist"}
 
 rm -rf "$STAGE"
@@ -14,12 +15,15 @@ mkdir -p "$STAGE/DEBIAN" \
     "$STAGE/usr/share/icons/hicolor/scalable/apps" \
     "$STAGE/usr/share/metainfo" \
     "$STAGE/usr/share/doc/eduka-konekta" \
+    "$STAGE/usr/lib/firewalld/services" \
+    "$STAGE/etc/ufw/applications.d" \
     "$OUTPUT"
 
 cp "$ROOT/packaging/control" "$STAGE/DEBIAN/control"
 cp "$ROOT/packaging/postinst" "$STAGE/DEBIAN/postinst"
 cp "$ROOT/packaging/postrm" "$STAGE/DEBIAN/postrm"
 chmod 0755 "$STAGE/DEBIAN/postinst" "$STAGE/DEBIAN/postrm"
+echo "/etc/ufw/applications.d/eduka-konekta" > "$STAGE/DEBIAN/conffiles"
 
 cp "$ROOT/packaging/launcher" "$STAGE/usr/bin/eduka-konekta"
 chmod 0755 "$STAGE/usr/bin/eduka-konekta"
@@ -33,9 +37,11 @@ cp "$ROOT/assets/style.css" "$STAGE/usr/share/eduka-konekta/assets/style.css"
 cp "$ROOT/assets/eduka-konekta.svg" "$STAGE/usr/share/icons/hicolor/scalable/apps/tl.edukasaun.EdukaKonekta.svg"
 cp "$ROOT/packaging/eduka-konekta.desktop" "$STAGE/usr/share/applications/eduka-konekta.desktop"
 cp "$ROOT/packaging/tl.edukasaun.EdukaKonekta.metainfo.xml" "$STAGE/usr/share/metainfo/tl.edukasaun.EdukaKonekta.metainfo.xml"
+cp "$ROOT/packaging/firewall/eduka-konekta.xml" "$STAGE/usr/lib/firewalld/services/eduka-konekta.xml"
+cp "$ROOT/packaging/firewall/eduka-konekta.ufw" "$STAGE/etc/ufw/applications.d/eduka-konekta"
 cp "$ROOT/README.md" "$STAGE/usr/share/doc/eduka-konekta/README.md"
 cp "$ROOT/CHANGELOG.md" "$STAGE/usr/share/doc/eduka-konekta/changelog"
 cp "$ROOT/LICENSE" "$STAGE/usr/share/doc/eduka-konekta/copyright"
 
 chmod -R go-w "$STAGE"
-dpkg-deb --root-owner-group --build "$STAGE" "$OUTPUT/eduka-konekta_0.0.6_all.deb"
+dpkg-deb --root-owner-group --build "$STAGE" "$OUTPUT/eduka-konekta_${VERSION}_all.deb"

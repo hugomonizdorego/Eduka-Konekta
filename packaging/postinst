@@ -6,5 +6,23 @@ fi
 if command -v update-desktop-database >/dev/null 2>&1; then
     update-desktop-database -q /usr/share/applications || true
 fi
-exit 0
 
+# Wi-Fi connections are often placed in a stricter firewall zone than wired
+# ones, which is why peers were visible over a LAN cable but not over Wi-Fi.
+# Open the Eduka-Konekta ports in every common zone of an active firewall.
+if [ "$1" = "configure" ]; then
+    if command -v firewall-cmd >/dev/null 2>&1 && firewall-cmd --state >/dev/null 2>&1; then
+        firewall-cmd --reload >/dev/null 2>&1 || true
+        for zone in public home work internal trusted $(firewall-cmd --get-default-zone 2>/dev/null); do
+            if firewall-cmd --permanent --zone="$zone" --query-service=eduka-konekta >/dev/null 2>&1; then
+                continue
+            fi
+            firewall-cmd --permanent --zone="$zone" --add-service=eduka-konekta >/dev/null 2>&1 || true
+        done
+        firewall-cmd --reload >/dev/null 2>&1 || true
+    fi
+    if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q "Status: active"; then
+        ufw allow Eduka-Konekta >/dev/null 2>&1 || true
+    fi
+fi
+exit 0
