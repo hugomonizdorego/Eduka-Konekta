@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>tl.edukasaun.EdukaKonekta</id>
+  <name>Eduka-Konekta</name>
+  <summary>Peer-to-peer school group messenger</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <description>
+    <p>Eduka-Konekta is a lightweight, serverless chat application for one trusted school network.</p>
+    <p>It discovers peers across active Ethernet and Wi-Fi interfaces, supports direct and teacher-managed group communication, document transfer, a school status feed, and 30-minute message controls.</p>
+    <p>Chat session data is erased when closed, while the active profile remains signed in until the user explicitly logs out.</p>
+  </description>
+  <launchable type="desktop-id">eduka-konekta.desktop</launchable>
+  <url type="homepage">https://edukasaunos.tl</url>
+  <developer id="tl.edukasaunos"><name>Hugo Moniz do Rego</name></developer>
+  <releases><release version="0.0.6" date="2026-09-04" type="development"/></releases>
+  <content_rating type="oars-1.1"/>
+</component>

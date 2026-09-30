@@ -1,0 +1,18 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Eduka-Konekta
+GenericName=School Group Messenger
+GenericName[id]=Pesan Grup Sekolah
+GenericName[tet]=Mensajen Grupu Eskola
+Comment=Peer-to-peer group chat for schools
+Comment[id]=Chat grup peer-to-peer untuk sekolah
+Comment[tet]=Chat grupu peer-to-peer ba eskola
+Exec=eduka-konekta
+Icon=tl.edukasaun.EdukaKonekta
+Terminal=false
+Categories=Network;Chat;Education;
+Keywords=school;chat;education;LAN;P2P;
+StartupNotify=true
+StartupWMClass=tl.edukasaun.EdukaKonekta
+

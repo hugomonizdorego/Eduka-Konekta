@@ -1,0 +1,17 @@
+Package: eduka-konekta
+Version: 0.0.6
+Section: net
+Priority: optional
+Architecture: all
+Depends: python3 (>= 3.11), python3-gi, gir1.2-gtk-3.0, python3-cryptography, ffmpeg, iproute2, v4l-utils, pulseaudio-utils
+Recommends: adwaita-icon-theme, fonts-noto-core
+Maintainer: Hugo Moniz do Rego <grupoideatl@gmail.com>
+Homepage: https://edukasaunos.tl
+Description: lightweight peer-to-peer group chat for schools
+ Eduka-Konekta connects teachers and students directly over IP without a
+ central chat server. It provides signed persistent device identities, LAN
+ discovery across Ethernet and Wi-Fi interfaces, refresh and bounded subnet
+ probing, direct and teacher-managed group chat, 30-minute message controls,
+ document transfer, status feed, desktop notifications, profile photos,
+ webcam video and microphone voice recording. Chat data is erased on close;
+ the active profile remains signed in until the user logs out.
