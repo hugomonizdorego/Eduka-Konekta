@@ -1,3 +1,18 @@
+Eduka-Konekta (0.1.1 Alpha) — 2026-10-01
+
+- Added the official Eduka-Konekta logo (application icon, full logo for light
+  and dark backgrounds, hicolor PNG icons) and a generator script.
+- The interface now follows the desktop GTK theme (light or dark) by default;
+  Eduka light and Eduka dark styles are available in Settings → Appearance.
+  The system font is used.
+- Fixed: closing attendance did not reach students; malformed school events
+  could raise errors; remembered peer addresses were rewritten on every
+  directory update; logout kept the previous page; the status bar did not
+  refresh after a Wi-Fi address change; GObject version warnings.
+- Stored exam file names are in English; English is the fallback language.
+- Package: md5sums, Installed-Size, PNG icons, firewall setup that also works
+  in a Cubic chroot; installation instructions for Cubic.
+
 Eduka-Konekta (0.1.0 Alpha) — 2026-09-30
 
 - Fixed peers not being found over Wi-Fi while LAN cable worked: Wi-Fi friendly

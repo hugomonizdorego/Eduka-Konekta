@@ -1,0 +1,15 @@
+/* Eduka dark: the built-in style for dark desktops and evening use. */
+@define-color ek_bg #141a22;
+@define-color ek_surface #1d2530;
+@define-color ek_fg #e6edf3;
+@define-color ek_text #e6edf3;
+@define-color ek_muted #8d9bab;
+@define-color ek_border #2e3a48;
+@define-color ek_hover #263140;
+@define-color ek_accent #4a8fe8;
+@define-color ek_accent_fg #ffffff;
+@define-color ek_soft #1b2d44;
+@define-color ek_own_bubble #1e3a5c;
+@define-color ek_rail #0b121b;
+@define-color ek_rail_fg #ffffff;
+@define-color ek_accent_text #8ab8ff;

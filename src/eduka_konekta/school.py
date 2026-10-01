@@ -315,7 +315,7 @@ class SchoolManager:
             data = question_file.read_bytes()
             if len(data) > DOCUMENT_LIMIT:
                 raise ValueError("document_limit")
-            destination = self.files_dir / exam_id / ("soal-" + safe_file_name(question_file.name))
+            destination = self.files_dir / exam_id / ("questions-" + safe_file_name(question_file.name))
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes(data)
             exam["file"] = {
@@ -490,7 +490,7 @@ class SchoolManager:
             data = answer_file.read_bytes()
             if not data or len(data) > DOCUMENT_LIMIT:
                 raise ValueError("document_limit")
-            copy = self.files_dir / exam_id / ("jawaban-" + safe_file_name(answer_file.name))
+            copy = self.files_dir / exam_id / ("answer-" + safe_file_name(answer_file.name))
             copy.parent.mkdir(parents=True, exist_ok=True)
             copy.write_bytes(data)
             submission["file"] = {
@@ -595,6 +595,9 @@ class SchoolManager:
         if session and session.get("role") == "owner":
             session["closed"] = True
             self.save()
+            targets = [peer.user_id for peer in self.online_students()]
+            if targets:
+                self.send({"kind": "attendance_close", "session_id": session_id}, targets)
 
     def mark_present(self, session_id: str) -> bool:
         session = self.attendance.get(session_id)
@@ -691,7 +694,11 @@ class SchoolManager:
             handler = getattr(self, f"_on_{kind}", None)
             if handler is None:
                 return None
-            return handler(event, sender_id, sender, sender_name)
+            try:
+                return handler(event, sender_id, sender, sender_name)
+            except (TypeError, ValueError, KeyError, AttributeError):
+                # A malformed event from another computer must never break the UI.
+                return None
 
     def _on_exam_publish(self, event, sender_id, sender, sender_name):
         if sender.get("role") != "teacher" or self.is_teacher:
@@ -719,7 +726,7 @@ class SchoolManager:
         })
         if isinstance(incoming.get("file"), dict):
             exam["file"] = {key: incoming["file"].get(key) for key in ("name", "mime", "size", "sha256")}
-            exam["file"]["name"] = safe_file_name(str(exam["file"].get("name") or "soal"))
+            exam["file"]["name"] = safe_file_name(str(exam["file"].get("name") or "questions"))
         if is_new:
             exam["received_at"] = self.clock()
             exam["deadline_local"] = None if remaining is None else self.clock() + float(remaining)
@@ -779,7 +786,7 @@ class SchoolManager:
         expected = (exam.get("file") or {}).get("sha256")
         if expected and hashlib.sha256(data).hexdigest() != expected:
             return None
-        destination = self.files_dir / exam["exam_id"] / safe_file_name(event.get("file_name", "soal"))
+        destination = self.files_dir / exam["exam_id"] / safe_file_name(event.get("file_name", "questions"))
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(data)
         exam.setdefault("file", {})["path"] = str(destination)
@@ -881,6 +888,14 @@ class SchoolManager:
             }
             self.save()
         self.send({"kind": "attendance_receipt", "session_id": session["session_id"]}, [sender_id])
+        return {"refresh": "attendance"}
+
+    def _on_attendance_close(self, event, sender_id, sender, sender_name):
+        session = self.attendance.get(event["session_id"])
+        if not session or session.get("role") == "owner" or session.get("teacher_id") != sender_id or session.get("closed"):
+            return None
+        session["closed"] = True
+        self.save()
         return {"refresh": "attendance"}
 
     def _on_attendance_receipt(self, event, sender_id, sender, sender_name):

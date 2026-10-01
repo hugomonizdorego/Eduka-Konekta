@@ -1,0 +1,37 @@
+/* Generic widget styling, loaded only for the built-in Eduka light/dark
+ * styles. With "System theme" the desktop theme draws these widgets. */
+window, dialog, popover, menu, .background { background-color: @ek_bg; color: @ek_fg; }
+menu, .menu, popover { background-color: @ek_surface; border: 1px solid @ek_border; }
+menuitem:hover { background-color: @ek_accent; color: @ek_accent_fg; }
+
+entry, spinbutton {
+  min-height: 34px;
+  color: @ek_text;
+  background-color: @ek_surface;
+  background-image: none;
+  border: 1px solid @ek_border;
+  border-radius: 8px;
+  box-shadow: none;
+}
+entry { padding: 0 10px; }
+entry:focus, spinbutton:focus { border-color: @ek_accent; box-shadow: 0 0 0 2px alpha(@ek_accent, 0.2); }
+spinbutton entry { border: none; box-shadow: none; }
+textview, textview text { background-color: @ek_surface; color: @ek_text; }
+
+button {
+  min-height: 30px;
+  padding: 4px 12px;
+  color: @ek_fg;
+  background-color: @ek_surface;
+  background-image: none;
+  border: 1px solid @ek_border;
+  border-radius: 8px;
+  box-shadow: none;
+  text-shadow: none;
+}
+button:hover { background-color: @ek_hover; }
+button:active, button:checked { background-color: @ek_soft; }
+button:disabled, button:disabled label { color: alpha(@ek_fg, 0.45); }
+combobox button { min-height: 32px; }
+checkbutton, radiobutton { color: @ek_fg; }
+scrolledwindow, viewport { background-color: transparent; }

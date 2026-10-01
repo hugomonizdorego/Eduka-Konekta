@@ -15,6 +15,9 @@ from typing import Any
 import gi
 
 gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+gi.require_version("GdkPixbuf", "2.0")
+gi.require_version("Pango", "1.0")
 from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk, Pango  # noqa: E402
 
 from . import APP_NAME, CHANNEL, VERSION
@@ -27,7 +30,7 @@ from .school import SchoolManager
 from .storage import MESSAGE_EDIT_WINDOW
 from .ui_school import SchoolPagesMixin
 from .widgets import (
-    add_class, asset, asset_image, badge, button, card, clear_box, framed, label, logo_pixbuf, margins,
+    add_class, asset, asset_image, badge, button, card, clear_box, framed, label, logo_image, logo_pixbuf, margins,
     profile_avatar, scrolled, text_of, text_view,
 )
 
@@ -73,6 +76,7 @@ class EdukaWindow(SchoolPagesMixin, Gtk.ApplicationWindow):
         self._tick_id = 0
         self._tick_count = 0
         self._css_provider: Gtk.CssProvider | None = None
+        self._default_prefer_dark: bool | None = None
         self.selected_photo_b64 = self.profile.photo_b64 if self.profile else ""
         self.selected_photo_mime = self.profile.photo_mime if self.profile else "image/jpeg"
         self.set_default_size(1240, 780)
@@ -99,17 +103,43 @@ class EdukaWindow(SchoolPagesMixin, Gtk.ApplicationWindow):
                 return "pt_BR" if code.endswith("BR") else "pt_PT"
             if base in LANGUAGES:
                 return base
-        return "id"
+        return "en"
 
     def t(self, key: str) -> str:
         return tr(self.language, key)
 
+    def _appearance(self) -> str:
+        """The active appearance: system (desktop theme), light or dark."""
+        mode = self.storage.settings.get("appearance", "system")
+        if mode == "system":
+            # A theme that lacks the standard named colours cannot be followed.
+            context = self.get_style_context()
+            found, _colour = context.lookup_color("theme_bg_color")
+            if not found:
+                return "light"
+        return mode if mode in {"system", "light", "dark"} else "system"
+
     def _load_css(self) -> None:
-        css = Path(asset("style.css")).read_text(encoding="utf-8")
+        mode = self._appearance()
+        parts = [Path(asset(f"palette-{mode}.css")).read_text(encoding="utf-8")]
+        if mode != "system":
+            parts.append(Path(asset("widgets-eduka.css")).read_text(encoding="utf-8"))
+        parts.append(Path(asset("style.css")).read_text(encoding="utf-8"))
+        css = "\n".join(parts)
         if self.storage.settings.get("large_text"):
             css = re.sub(r"font-size:\s*(\d+(?:\.\d+)?)px", lambda m: f"font-size: {round(float(m.group(1)) * 1.2, 1)}px", css)
+        settings = Gtk.Settings.get_default()
+        if settings is not None:
+            if self._default_prefer_dark is None:
+                self._default_prefer_dark = settings.get_property("gtk-application-prefer-dark-theme")
+            prefer_dark = {"dark": True, "light": False}.get(mode, self._default_prefer_dark)
+            settings.set_property("gtk-application-prefer-dark-theme", prefer_dark)
         provider = Gtk.CssProvider()
-        provider.load_from_data(css.encode("utf-8"))
+        try:
+            provider.load_from_data(css.encode("utf-8"))
+        except GLib.Error as error:
+            LOG.warning("Stylesheet could not be loaded: %s", error)
+            return
         screen = Gdk.Screen.get_default()
         if not screen:
             return
@@ -151,8 +181,7 @@ class EdukaWindow(SchoolPagesMixin, Gtk.ApplicationWindow):
         hero = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
         add_class(hero, "login-hero")
         hero.set_size_request(380, -1)
-        hero.pack_start(asset_image(96), False, False, 0)
-        hero.pack_start(label(APP_NAME, "hero-title", 0.0), False, False, 0)
+        hero.pack_start(logo_image("eduka-konekta-logo-light.svg", 300), False, False, 6)
         hero.pack_start(label(self.t("welcome"), "hero-subtitle", 0.0, wrap=True), False, False, 0)
         for icon, key in (("💬", "hero_chat"), ("📝", "hero_exams"), ("✅", "hero_attendance"), ("📶", "hero_network")):
             row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
@@ -178,7 +207,7 @@ class EdukaWindow(SchoolPagesMixin, Gtk.ApplicationWindow):
         self.language_combo = Gtk.ComboBoxText()
         for code, name in LANGUAGES.items():
             self.language_combo.append(code, name)
-        self.language_combo.set_active_id(self.language if self.language in LANGUAGES else "id")
+        self.language_combo.set_active_id(self.language if self.language in LANGUAGES else "en")
         self.language_combo.set_valign(Gtk.Align.START)
         self.language_combo.connect("changed", self._language_changed)
         top.pack_end(self.language_combo, False, False, 0)
@@ -273,7 +302,7 @@ class EdukaWindow(SchoolPagesMixin, Gtk.ApplicationWindow):
 
     def _language_changed(self, combo: Gtk.ComboBoxText) -> None:
         values = self._login_values()
-        self.language = combo.get_active_id() or "id"
+        self.language = combo.get_active_id() or "en"
         self.show_login(values)
 
     def _role_changed(self, _radio) -> None:
@@ -525,6 +554,8 @@ class EdukaWindow(SchoolPagesMixin, Gtk.ApplicationWindow):
         self._tick_school_pages()
         if self._tick_count % 15 == 0:
             self.school.resend()
+        if self._tick_count % 10 == 0:
+            self._update_status_line()
         if self._tick_count % 30 == 0:
             self._update_composer_state()
         if self.current_page == "network" and self._tick_count % 3 == 0:
@@ -1277,10 +1308,10 @@ class EdukaWindow(SchoolPagesMixin, Gtk.ApplicationWindow):
         self._render_people()
         self._render_status_feed()
         for peer in peers:
-            if peer.direct and peer.ip:
-                self.storage.remember_peer_ip(peer.ip)
             if peer.user_id not in new_ids:
                 continue
+            if peer.direct and peer.ip:
+                self.storage.remember_peer_ip(peer.ip)
             is_teacher = peer.profile.get("role") == "teacher"
             title = self.t("teacher_online") if is_teacher else self.t("friend_online")
             detail = f"{peer.profile.get('full_name', self.t('unknown_user'))} • {peer.profile.get('school_class', '')}"
@@ -1961,7 +1992,7 @@ class EdukaWindow(SchoolPagesMixin, Gtk.ApplicationWindow):
         dialog = Gtk.AboutDialog(transient_for=self, modal=True)
         dialog.set_program_name(APP_NAME)
         dialog.set_version(f"{VERSION} {CHANNEL}")
-        logo = logo_pixbuf(96)
+        logo = logo_pixbuf(128)
         if logo is not None:
             dialog.set_logo(logo)
         addresses = ", ".join(item["address"] for item in self.network.local_ips) if self.network else ""
@@ -1995,6 +2026,8 @@ class EdukaWindow(SchoolPagesMixin, Gtk.ApplicationWindow):
         self.peers = []
         self.known_peer_ids.clear()
         self.current_room = ""
+        self.current_page = "chat"
+        self.selected_exam_id = ""
         self.storage.logout()
         self.profile = None
         self.selected_photo_b64 = ""

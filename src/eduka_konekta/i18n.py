@@ -5,11 +5,11 @@ Portuguese uses the Portuguese text with the overrides in ``PT_BR``.
 """
 
 LANGUAGES = {
+    "en": "English (International)",
     "id": "Bahasa Indonesia",
     "tet": "Tetun",
     "pt_PT": "Português (Portugal)",
     "pt_BR": "Português (Brasil)",
-    "en": "English (International)",
 }
 
 _T = {
@@ -616,6 +616,16 @@ _T = {
     "language_hint": ("Interface language", "Idioma da interface", "Bahasa tampilan", "Lian ba ekrã"),
     "large_text": ("Large text", "Texto grande", "Teks besar", "Letra boot"),
     "large_text_hint": ("Makes all text 20% larger", "Aumenta todo o texto em 20%", "Memperbesar semua teks 20%", "Halo letra hotu boot liu 20%"),
+    "appearance": ("Appearance", "Aparência", "Tampilan", "Aparénsia"),
+    "appearance_hint": (
+        "\"System theme\" follows the Edukasaun OS desktop theme, including dark themes",
+        "\"Tema do sistema\" segue o tema do Edukasaun OS, incluindo temas escuros",
+        "\"Tema sistem\" mengikuti tema desktop Edukasaun OS, termasuk tema gelap",
+        "\"Tema sistema\" tuir tema desktop Edukasaun OS, inklui tema nakukun",
+    ),
+    "appearance_system": ("System theme", "Tema do sistema", "Tema sistem", "Tema sistema"),
+    "appearance_light": ("Eduka light", "Eduka claro", "Eduka terang", "Eduka naroman"),
+    "appearance_dark": ("Eduka dark", "Eduka escuro", "Eduka gelap", "Eduka nakukun"),
     "notifications": ("Notifications", "Notificações", "Notifikasi", "Notifikasaun"),
     "desktop_notifications": ("Desktop notifications", "Notificações no ambiente de trabalho", "Notifikasi desktop", "Notifikasaun iha desktop"),
     "desktop_notifications_hint": ("Show a notification when the window is in the background", "Mostrar notificação quando a janela está em segundo plano", "Tampilkan notifikasi saat jendela tidak aktif", "Hatudu notifikasaun bainhira janela la ativu"),

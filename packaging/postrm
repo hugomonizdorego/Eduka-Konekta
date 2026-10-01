@@ -10,9 +10,8 @@ if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
         done
         firewall-cmd --reload >/dev/null 2>&1 || true
     fi
-    if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q "Status: active"; then
-        ufw delete allow 45901/tcp >/dev/null 2>&1 || true
-        ufw delete allow 45900/udp >/dev/null 2>&1 || true
+    if command -v ufw >/dev/null 2>&1; then
+        ufw delete allow Eduka-Konekta >/dev/null 2>&1 || true
     fi
 fi
 exit 0

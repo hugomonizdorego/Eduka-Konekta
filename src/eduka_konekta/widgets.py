@@ -9,6 +9,9 @@ from typing import Any, Callable
 import gi
 
 gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+gi.require_version("GdkPixbuf", "2.0")
+gi.require_version("Pango", "1.0")
 from gi.repository import GdkPixbuf, GLib, Gtk, Pango  # noqa: E402
 
 
@@ -31,6 +34,19 @@ def logo_pixbuf(size: int) -> GdkPixbuf.Pixbuf | None:
         return GdkPixbuf.Pixbuf.new_from_file_at_scale(asset("eduka-konekta.svg"), size, size, True)
     except GLib.Error:
         return None
+
+
+def logo_image(name: str, width: int) -> Gtk.Widget:
+    """A full logo (mark and wordmark) scaled to ``width``; falls back to text."""
+    try:
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(asset(name), width, -1, True)
+        image = Gtk.Image.new_from_pixbuf(pixbuf)
+        image.set_halign(Gtk.Align.START)
+        return image
+    except GLib.Error:
+        fallback = Gtk.Label(label="Eduka-Konekta", xalign=0.0)
+        fallback.get_style_context().add_class("hero-title")
+        return fallback
 
 
 def asset_image(size: int) -> Gtk.Widget:

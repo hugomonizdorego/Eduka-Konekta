@@ -1,5 +1,4 @@
 import base64
-import json
 import tempfile
 import threading
 import time
@@ -21,7 +20,7 @@ from eduka_konekta.models import (
     verify_signature,
 )
 from eduka_konekta.moderation import RateLimiter, filter_text, parse_word_list
-from eduka_konekta.network import P2PNetwork, decode_packet, encode_frame, local_ipv4_info, subnet_hosts
+from eduka_konekta.network import P2PNetwork, decode_packet, encode_frame, subnet_hosts
 from eduka_konekta.school import SchoolManager, grade_answers, validate_school_payload
 from eduka_konekta.storage import Storage
 
@@ -228,6 +227,22 @@ class TranslationTests(unittest.TestCase):
             expected = set(re.findall(r"{(\w+)}", english))
             for language, catalog in CATALOGS.items():
                 self.assertEqual(expected, set(re.findall(r"{(\w+)}", catalog[key])), f"{language}:{key}")
+
+
+class AssetTests(unittest.TestCase):
+    def test_logo_and_theme_files_are_valid(self):
+        import xml.etree.ElementTree as ET
+        assets = Path(__file__).parents[1] / "assets"
+        for name in ("eduka-konekta.svg", "eduka-konekta-logo.svg", "eduka-konekta-logo-light.svg"):
+            root = ET.parse(assets / name).getroot()
+            self.assertTrue(root.tag.endswith("svg"), name)
+            self.assertNotIn("Chatalk", (assets / name).read_text(encoding="utf-8"))
+        for mode in ("system", "light", "dark"):
+            palette = (assets / f"palette-{mode}.css").read_text(encoding="utf-8")
+            for colour in ("ek_bg", "ek_surface", "ek_fg", "ek_muted", "ek_border", "ek_accent", "ek_accent_text", "ek_rail"):
+                self.assertIn(f"@define-color {colour} ", palette, f"{mode} lacks {colour}")
+        for size in (16, 32, 48, 128, 256):
+            self.assertTrue((assets / "icons" / f"eduka-konekta-{size}.png").is_file())
 
 
 class ModerationTests(unittest.TestCase):
@@ -666,6 +681,10 @@ class SchoolTests(unittest.TestCase):
                 self.assertTrue(wait_until(lambda: student_id.user_id in teacher.attendance[session["session_id"]]["present"]))
                 self.assertTrue(wait_until(lambda: student.attendance[session["session_id"]].get("acked")))
 
+                teacher.close_attendance(session["session_id"])
+                self.assertTrue(wait_until(lambda: student.attendance[session["session_id"]].get("closed")), "closing attendance did not reach the student")
+                self.assertFalse(student.mark_present(session["session_id"]))
+
                 teacher.publish_rules("Dilarang menyontek.")
                 self.assertTrue(wait_until(lambda: student.rules.get("text") == "Dilarang menyontek."))
                 teacher.set_room_lock("school:escola-central-dili", True)
@@ -676,6 +695,16 @@ class SchoolTests(unittest.TestCase):
                 self.assertEqual("95", reloaded.submissions[exam_id][student_id.user_id]["score"])
             finally:
                 teacher_net.stop(); student_net.stop()
+
+    def test_malformed_events_are_ignored(self):
+        with tempfile.TemporaryDirectory() as folder:
+            manager = SchoolManager(Path(folder), "EK-ME", lambda: profile("Maria da Silva"), lambda *_: None)
+            teacher = profile("Rita Belo", "teacher").public(include_photo=False)
+            self.assertIsNone(manager.handle({
+                "kind": "exam_publish", "sender_id": "EK-T", "profile": teacher,
+                "exam": {"exam_id": "e1", "kind": "exam", "title": "Broken", "teacher_id": "EK-T",
+                         "questions": [], "remaining_seconds": "not-a-number"},
+            }))
 
     def test_students_cannot_publish_exams_or_rules(self):
         with tempfile.TemporaryDirectory() as folder:

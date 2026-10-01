@@ -1,10 +1,25 @@
-# Eduka-Konekta 0.1.0 Alpha
+<p align="center"><img src="docs/logo.png" alt="Eduka-Konekta — Edukasaun OS" width="360"></p>
+
+# Eduka-Konekta 0.1.1 Alpha
 
 Eduka-Konekta is a lightweight GTK school application for **chat, exams, assignments and attendance**. Computers talk to each other directly over the school network — Wi-Fi, LAN cable, or both mixed — without internet, cloud accounts or a central server. Peers are accepted only when their profile uses the same school name.
 
 The interface is available in **Bahasa Indonesia, Tetun, Português (Portugal), Português (Brasil) and English**.
 
-## What is new in 0.1.0
+![Teacher chat](docs/screenshots/teacher-chat.png)
+
+## What is new in 0.1.1
+
+- **Official logo.** A speech bubble drawn from four connected strokes — people (the round nodes) joined in one school conversation — with the Eduka-Konekta wordmark and the Edukasaun OS tagline. Files: `assets/eduka-konekta.svg` (icon), `assets/eduka-konekta-logo.svg` and `assets/eduka-konekta-logo-light.svg` (full logo for light/dark backgrounds), PNG icons in `assets/icons/`. Regenerate with `python3 tools/make_logo.py Outfit-SemiBold.ttf` (Outfit, SIL Open Font License).
+- **Follows the Edukasaun OS desktop theme.** *Settings → Appearance*: **System theme** (default) takes every colour from the active GTK theme, including dark themes, and leaves buttons, entries and menus to the theme; **Eduka light** and **Eduka dark** are built-in styles. The system font is used.
+- **Fixes:** closing an attendance session now reaches students; malformed school events from another computer are ignored instead of raising errors; remembered addresses are written only for newly found users; logging out resets the open page; the status bar refreshes when the Wi-Fi address changes; stored file names are in English; English is the fallback language; GObject version warnings removed.
+- **Package:** hicolor PNG icons (16–512 px), `md5sums`, `Installed-Size`, and firewall setup that also works inside a Cubic chroot.
+
+| System theme (dark) | Eduka light | Student exam |
+| --- | --- | --- |
+| ![Dark theme](docs/screenshots/dark-exams.png) | ![Eduka light](docs/screenshots/eduka-light-chat.png) | ![Student exam](docs/screenshots/student-exams.png) |
+
+## What was new in 0.1.0
 
 ### Wi-Fi connection fix
 
@@ -62,18 +77,34 @@ Existing features remain: class/school/teacher/group/private chat, announcements
 
 ## Install on Debian 13 / Edukasaun OS
 
+The ready-made package is in `release/eduka-konekta_0.1.1_all.deb`.
+
 ```bash
-sudo apt install ./eduka-konekta_0.1.0_all.deb
+sudo apt install ./eduka-konekta_0.1.1_all.deb
 ```
 
 APT downloads the dependencies (GTK 3, Python GObject, Python Cryptography, librsvg, FFmpeg, iproute2, v4l-utils, pulseaudio-utils). Do not use `dpkg -i` alone on a new system.
+
+### Add to an Edukasaun OS image with Cubic
+
+1. In Cubic, open the project and go to the **Terminal** page (a root shell inside the image).
+2. Copy the package into the image: drag `eduka-konekta_0.1.1_all.deb` onto the terminal window (Cubic copies it to the current folder), or use the copy button.
+3. Install it:
+
+   ```bash
+   apt update
+   apt install -y ./eduka-konekta_0.1.1_all.deb
+   rm eduka-konekta_0.1.1_all.deb
+   ```
+
+4. Continue in Cubic to generate the ISO. Every computer installed from the image has Eduka-Konekta in the Education menu, with TCP 45901 / UDP 45900 already allowed in firewalld or ufw.
 
 Launch *Eduka-Konekta* from the Education or Network menu, or run `eduka-konekta`.
 
 ## Build and test
 
 ```bash
-./build-deb.sh
+sh build-deb.sh release          # writes release/eduka-konekta_<version>_all.deb
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 

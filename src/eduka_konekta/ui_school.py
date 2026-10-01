@@ -9,6 +9,9 @@ from typing import Any
 import gi
 
 gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+gi.require_version("GdkPixbuf", "2.0")
+gi.require_version("Pango", "1.0")
 from gi.repository import Gdk, GLib, Gtk, Pango  # noqa: E402
 
 from .i18n import LANGUAGES
@@ -1102,6 +1105,12 @@ class SchoolPagesMixin:
         large.set_active(bool(settings.get("large_text")))
         large.connect("notify::active", self._settings_large_text)
         general.pack_start(self._setting_row("large_text", "large_text_hint", large), False, False, 0)
+        appearance = Gtk.ComboBoxText()
+        for value in ("system", "light", "dark"):
+            appearance.append(value, self.t("appearance_" + value))
+        appearance.set_active_id(settings.get("appearance", "system"))
+        appearance.connect("changed", self._settings_appearance)
+        general.pack_start(self._setting_row("appearance", "appearance_hint", appearance), False, False, 0)
         box.pack_start(general, False, False, 0)
 
         notifications = card()
@@ -1178,6 +1187,10 @@ class SchoolPagesMixin:
         self.storage.save_profile(self.profile)
         self.current_page = "settings"
         GLib.idle_add(lambda: (self.show_chat(restart_network=False), False)[1])
+
+    def _settings_appearance(self, combo: Gtk.ComboBoxText) -> None:
+        self.storage.save_settings(appearance=combo.get_active_id() or "system")
+        self._load_css()
 
     def _settings_large_text(self, switch: Gtk.Switch, _param) -> None:
         self.storage.save_settings(large_text=switch.get_active())

@@ -22,6 +22,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "word_filter": True,
     "filter_words": [],
     "large_text": False,
+    "appearance": "system",
     "rules_accepted": {},
 }
 

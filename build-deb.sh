@@ -32,9 +32,14 @@ find "$STAGE/usr/lib/python3/dist-packages/eduka_konekta" -type d -name __pycach
 find "$STAGE/usr/lib/python3/dist-packages/eduka_konekta" -type d -exec chmod 0755 {} +
 find "$STAGE/usr/lib/python3/dist-packages/eduka_konekta" -type f -exec chmod 0644 {} +
 
-cp "$ROOT/assets/eduka-konekta.svg" "$STAGE/usr/share/eduka-konekta/assets/eduka-konekta.svg"
-cp "$ROOT/assets/style.css" "$STAGE/usr/share/eduka-konekta/assets/style.css"
+cp "$ROOT"/assets/*.svg "$ROOT"/assets/*.css "$STAGE/usr/share/eduka-konekta/assets/"
 cp "$ROOT/assets/eduka-konekta.svg" "$STAGE/usr/share/icons/hicolor/scalable/apps/tl.edukasaun.EdukaKonekta.svg"
+for size in 16 24 32 48 64 128 256 512; do
+    mkdir -p "$STAGE/usr/share/icons/hicolor/${size}x${size}/apps"
+    cp "$ROOT/assets/icons/eduka-konekta-$size.png" "$STAGE/usr/share/icons/hicolor/${size}x${size}/apps/tl.edukasaun.EdukaKonekta.png"
+done
+mkdir -p "$STAGE/usr/share/pixmaps"
+cp "$ROOT/assets/icons/eduka-konekta-128.png" "$STAGE/usr/share/pixmaps/tl.edukasaun.EdukaKonekta.png"
 cp "$ROOT/packaging/eduka-konekta.desktop" "$STAGE/usr/share/applications/eduka-konekta.desktop"
 cp "$ROOT/packaging/tl.edukasaun.EdukaKonekta.metainfo.xml" "$STAGE/usr/share/metainfo/tl.edukasaun.EdukaKonekta.metainfo.xml"
 cp "$ROOT/packaging/firewall/eduka-konekta.xml" "$STAGE/usr/lib/firewalld/services/eduka-konekta.xml"
@@ -44,4 +49,9 @@ cp "$ROOT/CHANGELOG.md" "$STAGE/usr/share/doc/eduka-konekta/changelog"
 cp "$ROOT/LICENSE" "$STAGE/usr/share/doc/eduka-konekta/copyright"
 
 chmod -R go-w "$STAGE"
+find "$STAGE" -type f -exec chmod u+rw,go+r {} +
+INSTALLED_SIZE=$(du -sk --exclude=DEBIAN "$STAGE" | cut -f1)
+sed -i "/^Installed-Size:/d" "$STAGE/DEBIAN/control"
+echo "Installed-Size: $INSTALLED_SIZE" >> "$STAGE/DEBIAN/control"
+(cd "$STAGE" && find . -type f ! -path "./DEBIAN/*" -printf '%P\0' | sort -z | xargs -0 md5sum > DEBIAN/md5sums)
 dpkg-deb --root-owner-group --build "$STAGE" "$OUTPUT/eduka-konekta_${VERSION}_all.deb"
