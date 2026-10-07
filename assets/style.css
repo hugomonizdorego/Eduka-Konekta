@@ -1,229 +1,225 @@
-* {
-  font-family: "Noto Sans", "DejaVu Sans", sans-serif;
-}
+/* Eduka-Konekta structure. Colours come from the active palette
+ * (palette-system.css, palette-light.css or palette-dark.css). */
 
-window, .app-root, .login-root {
-  background-image: linear-gradient(135deg, #f7fbff, #e4f1fc);
-  color: #17344f;
-}
+@define-color ek_success #2e9d4f;
+@define-color ek_warning #e08a00;
+@define-color ek_danger #d93025;
+@define-color ek_teacher #8e44ad;
+@define-color ek_student #00897b;
+@define-color ek_teacher_text mix(@ek_teacher, @ek_fg, 0.3);
+@define-color ek_student_text mix(@ek_student, @ek_fg, 0.25);
 
-.classic-titlebar {
-  min-height: 38px;
-  padding: 3px 10px;
-  background-image: linear-gradient(to bottom, #2e98ed, #0863c5);
-  border-bottom: 1px solid #044995;
-  box-shadow: inset 0 1px rgba(255,255,255,.35), 0 2px 5px rgba(22,71,116,.18);
-}
+.app-root, .page, .conversation, .message-scroller { background-color: @ek_bg; color: @ek_fg; }
 
-.window-title { color: white; font-weight: bold; font-size: 15px; }
-
-.login-root {
-  background-image: linear-gradient(145deg, #ffffff 0%, #edf6ff 50%, #dbeaff 100%);
-}
-
-.login-card {
-  padding: 22px 34px 26px;
-  background-color: rgba(255, 255, 255, .94);
-  border: 1px solid #9fbfe0;
-  border-radius: 16px;
-  box-shadow: inset 0 1px rgba(255,255,255,.9), 0 7px 22px rgba(35, 91, 145, .20);
-}
-
-.login-heading { color: #0759ad; font-size: 25px; font-weight: bold; }
-.muted { color: #5d7186; font-size: 13px; }
-.field-label { color: #23435e; font-size: 12px; font-weight: bold; }
-.error-text { color: #b3261e; font-size: 12px; }
-.security-note { color: #4f708f; font-size: 11px; }
-.privacy-banner {
-  padding: 5px 12px;
-  color: #315c3b;
-  font-size: 10px;
-  background-color: #e9f8e9;
-  border-bottom: 1px solid #afd1b1;
-}
-
-entry, spinbutton, combobox button {
-  min-height: 34px;
-  border: 1px solid #93b5d6;
-  border-radius: 7px;
-  background-image: linear-gradient(to bottom, #f7fbff, #ffffff 38%);
-  box-shadow: inset 0 1px 3px rgba(35,76,112,.10), 0 1px rgba(255,255,255,.8);
-}
-
-button {
-  color: #244c6b;
-  border: 1px solid #a8bfd3;
-  border-radius: 7px;
-  background-image: linear-gradient(to bottom, #ffffff, #edf5fc 58%, #dceaf6);
-  box-shadow: inset 0 1px rgba(255,255,255,.85), 0 1px 2px rgba(41,79,111,.13);
-}
-
-button:hover { background-image: linear-gradient(to bottom, #ffffff, #e4f2ff 55%, #cfe5f7); }
-button:active { background-image: linear-gradient(to bottom, #d6e8f7, #f8fcff); box-shadow: inset 0 1px 3px rgba(31,75,112,.18); }
-
-.primary-button, .send-button {
-  color: white;
+/* Accent and danger buttons --------------------------------------------- */
+.primary-button, .send-button, .primary-small {
+  color: @ek_accent_fg;
   font-weight: bold;
-  min-height: 38px;
-  border: 1px solid #07549f;
-  border-radius: 7px;
-  background-image: linear-gradient(to bottom, #3da4f5, #0968c8);
-  text-shadow: 0 1px rgba(0, 0, 0, .22);
+  background-image: none;
+  background-color: @ek_accent;
+  border-color: shade(@ek_accent, 0.9);
+  box-shadow: none;
+  text-shadow: none;
 }
+.primary-button label, .send-button label, .primary-small label { color: @ek_accent_fg; }
+.primary-button:hover, .send-button:hover, .primary-small:hover { background-color: shade(@ek_accent, 1.08); }
+.primary-button:active, .send-button:active, .primary-small:active { background-color: shade(@ek_accent, 0.9); }
+.primary-button:disabled, .send-button:disabled { background-color: alpha(@ek_accent, 0.45); }
+.primary-button { min-height: 34px; padding: 4px 16px; }
+.danger-button, .danger-button label { color: @ek_danger; }
+.small-button { min-height: 24px; padding: 1px 10px; font-size: 12px; }
+.flat-link { background: none; border: none; box-shadow: none; }
+.flat-link label { color: @ek_accent_text; }
 
-.primary-button:hover, .send-button:hover { background-image: linear-gradient(to bottom, #55b3fb, #0d78df); }
+/* Login ------------------------------------------------------------------- */
+.login-root, .login-form-side { background-color: @ek_bg; }
+.login-hero {
+  padding: 40px 36px 28px;
+  background-image: linear-gradient(160deg, #0f2a4a 0%, #1557a8 62%, #1e88e5 100%);
+}
+.login-hero label { color: #ffffff; }
+.hero-subtitle { font-size: 15px; color: rgba(255, 255, 255, 0.9); }
+.hero-icon { font-size: 20px; }
+.hero-feature { font-size: 14px; color: rgba(255, 255, 255, 0.92); }
+.hero-footer { font-size: 11px; color: rgba(255, 255, 255, 0.72); }
+.login-card { padding: 24px 28px; }
+.login-heading { color: @ek_fg; font-size: 22px; font-weight: bold; }
+.segmented button { min-height: 36px; font-weight: bold; border-radius: 0; }
+.segmented button:first-child { border-radius: 8px 0 0 8px; }
+.segmented button:last-child { border-radius: 0 8px 8px 0; }
+.segmented button:checked { color: @ek_accent_fg; background-image: none; background-color: @ek_accent; border-color: @ek_accent; }
+.segmented button:checked label { color: @ek_accent_fg; }
 
-menubar {
-  background-image: linear-gradient(to bottom, #ffffff, #eaf3fc);
-  border-bottom: 1px solid #b8cce0;
-  padding: 1px 5px;
-}
+/* Text -------------------------------------------------------------------- */
+.muted { color: @ek_muted; font-size: 13px; }
+.field-label { color: @ek_fg; font-size: 12px; font-weight: bold; }
+.error-text { color: @ek_danger; font-size: 13px; }
+.security-note { color: @ek_muted; font-size: 12px; }
+.section-label { color: @ek_muted; font-size: 11px; font-weight: bold; }
+.card-title { color: @ek_fg; font-size: 15px; font-weight: bold; }
+.card-body { color: @ek_text; font-size: 13px; }
+.rules-text { color: @ek_text; font-size: 14px; }
 
-.main-toolbar {
-  min-height: 71px;
-  padding: 6px 9px;
-  background-image: linear-gradient(to bottom, #ffffff 0%, #eaf5ff 66%, #d0e5f8 100%);
-  border-bottom: 1px solid #8caccc;
-  box-shadow: inset 0 1px rgba(255,255,255,.9), 0 2px 5px rgba(44,86,122,.13);
-}
-
-.main-toolbar button:hover { background-color: rgba(134, 194, 244, .25); border-radius: 6px; }
-.brand-name { color: #0759ad; font-size: 21px; font-weight: bold; }
-.brand-version { color: #5480a6; font-size: 10px; }
-.toolbar-label { color: #274b6e; font-size: 10px; }
-
-.sidebar {
-  padding: 14px 10px;
-  background-image: linear-gradient(to right, #dbeeff, #eef7ff);
-  border-right: 1px solid #9ebad5;
-}
-
-.profile-card {
-  padding: 13px 8px;
-  background-color: rgba(255,255,255,.78);
-  border: 1px solid #9fbddd;
-  border-radius: 10px;
-  box-shadow: inset 0 1px rgba(255,255,255,.95), 0 2px 5px rgba(44,83,119,.14);
-}
-
-.profile-name { color: #123e68; font-size: 15px; font-weight: bold; }
-.profile-photo { border: 2px solid #ffffff; border-radius: 9px; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
-.profile-school { color: #55748e; font-size: 10px; }
-.role-badge { color: #2a7737; font-size: 10px; font-weight: bold; }
-.section-label { color: #477496; font-size: 10px; font-weight: bold; }
-.sidebar-note { color: #67839b; font-size: 10px; padding: 7px; }
-
-.sidebar togglebutton {
-  min-height: 38px;
-  padding: 5px 9px;
-  color: #254f71;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 7px;
-}
-
-.sidebar togglebutton:hover { background-color: rgba(255,255,255,.72); border-color: #b9d1e6; }
-.sidebar togglebutton:checked { color: #064f9a; font-weight: bold; background-image: linear-gradient(to bottom, #fff, #d8ebff); border-color: #79a9d6; }
-
-.conversation { background-color: #f9fcff; }
-.status-feed {
-  padding: 7px 10px 5px;
-  background-image: linear-gradient(to bottom, #f9fcff, #e9f4fd);
-  border-bottom: 1px solid #b8ccdf;
-  box-shadow: inset 0 1px rgba(255,255,255,.92), 0 1px 3px rgba(42,80,112,.08);
-}
-.status-card {
-  padding: 7px 9px;
-  background-image: linear-gradient(145deg, #ffffff, #edf6fe);
-  border: 1px solid #a9c6df;
-  border-radius: 9px;
-  box-shadow: inset 0 1px rgba(255,255,255,.95), 0 2px 4px rgba(43,82,116,.12);
-}
-.status-person { color: #174f7e; font-size: 10px; font-weight: bold; }
-.status-copy { color: #355b77; font-size: 10px; }
-.status-empty { color: #7890a4; font-size: 10px; font-style: italic; }
-.status-selected-file { color: #55748e; font-size: 10px; }
-.status-add-button, .refresh-button { min-height: 25px; padding: 1px 8px; }
-.conversation-header {
-  min-height: 49px;
-  padding: 7px 13px;
-  background-image: linear-gradient(to bottom, #ffffff, #e9f4ff);
-  border-bottom: 1px solid #abc4dd;
-  box-shadow: inset 0 1px rgba(255,255,255,.9), 0 2px 4px rgba(51,89,122,.10);
-}
-.room-title { color: #124d81; font-size: 17px; font-weight: bold; }
-.room-subtitle { color: #668096; font-size: 10px; }
-
-.composer-toolbar {
-  min-height: 32px;
-  padding: 2px 9px;
-  background-image: linear-gradient(to bottom, #f8fcff, #e4f0fb);
-  border-top: 1px solid #adc4da;
-  box-shadow: inset 0 1px rgba(255,255,255,.88), 0 -1px 3px rgba(46,81,111,.08);
-}
-.media-button { min-width: 34px; min-height: 30px; font-size: 15px; padding: 1px 7px; }
-.composer { padding: 9px; background-color: #eef6fd; border-top: 1px solid #d4e2ee; }
-.composer entry { min-height: 39px; font-size: 14px; }
-.send-button { min-width: 90px; }
-
-.message-peer, .message-own {
-  padding: 9px 11px;
-  border-radius: 10px;
-  border: 1px solid #b7cee2;
-  background-color: #ffffff;
-  box-shadow: inset 0 1px rgba(255,255,255,.85), 0 2px 5px rgba(55, 92, 124, .13);
-}
-.message-own { background-color: #dff0ff; border-color: #8ebce5; }
-.message-name { color: #1262a3; font-size: 10px; font-weight: bold; }
-.message-time { color: #7b91a4; font-size: 9px; }
-.empty-message { color: #8299ad; font-style: italic; }
-.message-action, .message-action-danger {
-  min-height: 24px;
-  padding: 1px 6px;
-  font-size: 9px;
-}
-.message-action-danger { color: #9b2c2c; border-color: #d6abab; }
-
-.people-panel {
-  padding: 13px 9px;
-  background-image: linear-gradient(to left, #e0effd, #f4f9fe);
-  border-left: 1px solid #a9c1d8;
-}
-.person-row { padding: 8px 5px; border-bottom: 1px solid #d4e1ec; }
-.person-name { color: #244c6b; font-size: 11px; font-weight: bold; }
-.person-detail { color: #6c8497; font-size: 9px; }
-.person-status { color: #26714c; font-size: 9px; font-style: italic; }
-.people-panel button { padding: 1px; border-radius: 7px; }
-.people-panel button:hover { background-color: rgba(255,255,255,.72); }
-.online-group-label {
-  color: #15598d;
-  font-size: 10px;
-  font-weight: bold;
-  padding: 4px 6px;
-  background-image: linear-gradient(to bottom, #ffffff, #dfeefa);
-  border: 1px solid #b5ccdf;
-  border-radius: 6px;
-  box-shadow: inset 0 1px rgba(255,255,255,.9), 0 1px 2px rgba(49,83,111,.09);
-}
-.online-empty { color: #8196a8; font-size: 9px; font-style: italic; padding: 8px; }
-.online-dot { color: #39ad4e; font-size: 12px; }
-.notification-counter {
-  color: #315a7d;
-  font-size: 11px;
-  font-weight: bold;
-  padding: 5px 8px;
-  border: 1px solid #bfd2e2;
+/* Cards, badges, chips ---------------------------------------------------- */
+.card {
+  padding: 14px 16px;
+  background-color: @ek_surface;
+  border: 1px solid @ek_border;
   border-radius: 12px;
-  background-image: linear-gradient(to bottom, #ffffff, #e7f1f9);
-  box-shadow: inset 0 1px rgba(255,255,255,.9), 0 1px 2px rgba(45,79,108,.12);
 }
-.recording-label { color: #bd2727; font-size: 16px; font-weight: bold; padding: 12px; }
+.info-card { background-color: @ek_soft; border-color: alpha(@ek_accent, 0.3); }
+.rules-card { background-color: alpha(@ek_warning, 0.1); border-color: alpha(@ek_warning, 0.35); }
+.result-card { background-color: alpha(@ek_success, 0.12); border-color: alpha(@ek_success, 0.4); }
+.result-score { color: @ek_success; font-size: 20px; font-weight: bold; }
+.teacher-tools { padding: 10px; background-color: alpha(@ek_teacher, 0.07); border-color: alpha(@ek_teacher, 0.25); }
 
-.statusbar {
-  min-height: 23px;
-  padding: 2px 8px;
-  color: #526f89;
-  background-image: linear-gradient(to bottom, #f8fbfe, #dceaf7);
-  border-top: 1px solid #9eb8cf;
+.badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+.badge-info { color: @ek_accent_text; background-color: alpha(@ek_accent, 0.14); }
+.badge-success { color: @ek_success; background-color: alpha(@ek_success, 0.15); }
+.badge-warning { color: @ek_warning; background-color: alpha(@ek_warning, 0.16); }
+.badge-muted { color: @ek_muted; background-color: alpha(@ek_muted, 0.15); }
+.badge-teacher { color: @ek_teacher_text; background-color: alpha(@ek_teacher, 0.14); }
+.badge-student { color: @ek_student_text; background-color: alpha(@ek_student, 0.14); }
+.chip { padding: 2px 4px 2px 10px; background-color: @ek_soft; border-radius: 14px; }
+.chip-close { min-height: 20px; min-width: 20px; padding: 0 4px; border: none; background: none; box-shadow: none; }
+
+/* Avatars ----------------------------------------------------------------- */
+.profile-photo { border-radius: 50%; }
+.avatar-initials { color: #ffffff; font-weight: bold; font-size: 14px; border-radius: 50%; background-color: #1565c0; }
+.avatar-small { font-size: 11px; }
+.avatar-large { font-size: 22px; }
+.avatar-teacher { background-color: #8e44ad; }
+.avatar-c0 { background-color: #1e6fd0; }
+.avatar-c1 { background-color: #00897b; }
+.avatar-c2 { background-color: #e86a10; }
+.avatar-c3 { background-color: #d81b60; }
+.avatar-c4 { background-color: #5e35b1; }
+.avatar-c5 { background-color: #2e7d32; }
+.logo-fallback { font-size: 26px; }
+
+/* Top bar ----------------------------------------------------------------- */
+.topbar { min-height: 52px; padding: 6px 14px; background-color: @ek_surface; border-bottom: 1px solid @ek_border; }
+.brand-name { color: @ek_fg; font-size: 17px; font-weight: bold; }
+.brand-school { color: @ek_muted; font-size: 12px; }
+.online-pill { border-radius: 16px; font-weight: bold; }
+.online-pill label { color: @ek_warning; }
+.online-pill-active label { color: @ek_success; }
+.notification-counter { border-radius: 16px; font-weight: bold; }
+.notification-active label { color: @ek_danger; }
+.profile-menu-button { padding: 2px 10px; border-radius: 22px; }
+.menu-name { color: @ek_fg; font-size: 13px; font-weight: bold; }
+.menu-role, .menu-caret { color: @ek_muted; font-size: 11px; }
+
+/* Navigation rail --------------------------------------------------------- */
+.navrail { min-width: 96px; padding: 10px 6px; background-color: @ek_rail; border-right: 1px solid @ek_border; }
+.nav-button { min-height: 60px; padding: 6px 2px; border: none; border-radius: 10px; background-image: none; background-color: transparent; box-shadow: none; }
+.nav-button label { color: alpha(@ek_rail_fg, 0.75); }
+.nav-button:hover { background-color: alpha(@ek_rail_fg, 0.08); }
+.nav-button:checked { background-color: alpha(@ek_rail_fg, 0.15); }
+.nav-button:checked label { color: @ek_rail_fg; }
+.nav-icon { font-size: 22px; }
+.nav-label { font-size: 11px; font-weight: bold; }
+
+/* Pages ------------------------------------------------------------------- */
+.page-header { padding: 14px 20px; background-color: @ek_surface; border-bottom: 1px solid @ek_border; }
+.page-title { color: @ek_fg; font-size: 20px; font-weight: bold; }
+.page-subtitle { color: @ek_muted; font-size: 13px; }
+.list-pane { background-color: @ek_surface; border-right: 1px solid @ek_border; }
+.list-item { padding: 10px 12px; border: 1px solid @ek_border; border-radius: 10px; background-image: none; background-color: @ek_surface; box-shadow: none; }
+.list-item:hover { background-color: @ek_hover; }
+.list-item-selected { background-color: @ek_soft; border-color: @ek_accent; }
+.list-title { color: @ek_fg; font-size: 14px; font-weight: bold; }
+.list-meta { color: @ek_muted; font-size: 12px; }
+.empty-icon { font-size: 40px; }
+.empty-message { color: @ek_muted; font-size: 14px; }
+.stat-tile { padding: 12px 8px; }
+.stat-value { color: @ek_accent_text; font-size: 26px; font-weight: bold; }
+.stat-label { color: @ek_muted; font-size: 11px; }
+.exam-header { border-left: 4px solid @ek_accent; }
+.exam-title { color: @ek_fg; font-size: 20px; font-weight: bold; }
+.exam-instructions { color: @ek_text; font-size: 14px; padding: 8px 10px; background-color: @ek_soft; border-radius: 8px; }
+.countdown { color: @ek_accent_text; font-size: 14px; font-weight: bold; }
+.question-card, .question-editor { padding: 12px 14px; }
+.question-number, .option-letter { color: @ek_accent_text; font-weight: bold; }
+.question-text { color: @ek_text; font-size: 14px; }
+.answer-text { color: @ek_text; font-size: 13px; }
+.essay-answer { padding: 8px; background-color: @ek_soft; border-radius: 8px; }
+.file-card, .submission-row { padding: 10px 14px; }
+.text-frame { border: 1px solid @ek_border; border-radius: 8px; background-color: @ek_surface; }
+.text-frame > border { border: none; }
+.setting-row { padding: 8px 0; border-bottom: 1px solid @ek_border; }
+.setting-title { color: @ek_fg; font-size: 14px; font-weight: bold; }
+
+/* Chat -------------------------------------------------------------------- */
+.rooms-scroller, .rooms-panel, .people-panel, .status-feed { background-color: @ek_surface; }
+.rooms-panel { padding: 12px 10px; border-right: 1px solid @ek_border; }
+.people-panel { padding: 12px 10px; border-left: 1px solid @ek_border; }
+.room-button, .person-button, .media-button, .emoji-choice {
+  border: none;
+  background-image: none;
+  background-color: transparent;
+  box-shadow: none;
 }
-.status-text, .fingerprint { font-size: 9px; }
+.room-button { min-height: 34px; padding: 4px 10px; border-radius: 8px; }
+.room-button label { color: @ek_fg; font-size: 14px; }
+.room-button:hover, .person-button:hover, .media-button:hover, .emoji-choice:hover { background-color: @ek_hover; }
+.room-button:checked { background-color: @ek_soft; }
+.room-button:checked label { color: @ek_accent_text; font-weight: bold; }
+.has-unread label { font-weight: bold; }
+.tool-button label { font-size: 13px; }
+
+.status-feed { padding: 8px 14px 4px; border-bottom: 1px solid @ek_border; }
+.status-card { padding: 8px 10px; background-color: @ek_bg; border: 1px solid @ek_border; border-radius: 12px; }
+.status-person { color: @ek_fg; font-size: 12px; font-weight: bold; }
+.status-copy { color: @ek_muted; font-size: 12px; }
+.status-empty { color: @ek_muted; font-size: 12px; font-style: italic; }
+.conversation-header { min-height: 52px; padding: 8px 16px; background-color: @ek_surface; border-bottom: 1px solid @ek_border; }
+.room-title { color: @ek_fg; font-size: 18px; font-weight: bold; }
+.room-subtitle { color: @ek_muted; font-size: 12px; }
+.lock-banner { padding: 8px 16px; color: @ek_warning; font-size: 13px; background-color: alpha(@ek_warning, 0.12); border-bottom: 1px solid alpha(@ek_warning, 0.3); }
+.day-separator { color: @ek_muted; font-size: 11px; font-weight: bold; padding: 2px 10px; }
+.message-peer, .message-own, .message-broadcast, .message-grade {
+  padding: 9px 12px;
+  border-radius: 14px;
+  border: 1px solid @ek_border;
+  background-color: @ek_surface;
+}
+.message-own { background-color: @ek_own_bubble; border-color: alpha(@ek_accent, 0.3); }
+.message-broadcast { background-color: alpha(@ek_warning, 0.12); border-color: alpha(@ek_warning, 0.35); }
+.message-grade { background-color: alpha(@ek_success, 0.12); border-color: alpha(@ek_success, 0.35); }
+.message-name { color: @ek_accent_text; font-size: 12px; font-weight: bold; }
+.message-text { color: @ek_text; font-size: 14px; }
+.message-time { color: @ek_muted; font-size: 11px; }
+.file-chip { padding: 6px 8px; background-color: alpha(@ek_bg, 0.6); border: 1px solid @ek_border; border-radius: 10px; }
+.file-name { color: @ek_text; font-size: 13px; }
+.message-action { min-height: 22px; padding: 0 8px; font-size: 11px; background-image: none; background-color: transparent; border-color: transparent; box-shadow: none; }
+.message-action label { color: @ek_muted; }
+.message-action-danger label { color: @ek_danger; }
+.empty-state { padding: 20px; }
+
+.composer-area { background-color: @ek_surface; border-top: 1px solid @ek_border; }
+.composer-toolbar { padding: 4px 10px 0; }
+.media-button { min-width: 34px; min-height: 30px; padding: 0 6px; font-size: 16px; }
+.composer { padding: 6px 12px 12px; }
+.composer entry { min-height: 40px; font-size: 14px; border-radius: 20px; padding: 0 16px; }
+.send-button { min-width: 100px; min-height: 40px; border-radius: 20px; }
+.emoji-choice { font-size: 20px; min-width: 36px; min-height: 36px; }
+
+.online-group-label { color: @ek_muted; font-size: 11px; font-weight: bold; padding: 6px 4px 2px; }
+.person-button { padding: 6px; border-radius: 10px; }
+.person-name { color: @ek_fg; font-size: 13px; font-weight: bold; }
+.person-detail { color: @ek_muted; font-size: 11px; }
+.person-status { color: @ek_student_text; font-size: 11px; font-style: italic; }
+.online-empty { color: @ek_muted; font-size: 12px; font-style: italic; }
+.online-dot { color: @ek_success; font-size: 11px; }
+.relay-dot { color: @ek_warning; font-size: 13px; font-weight: bold; }
+
+/* Status bar, toast ------------------------------------------------------- */
+.statusbar { min-height: 24px; padding: 2px 12px; background-color: @ek_surface; border-top: 1px solid @ek_border; }
+.status-text, .fingerprint { color: @ek_muted; font-size: 11px; }
+.status-dot-online { color: @ek_success; }
+.status-dot-searching { color: @ek_warning; }
+.status-dot-offline { color: @ek_danger; }
+.toast { padding: 10px 18px; color: #ffffff; font-size: 13px; background-color: rgba(15, 30, 50, 0.94); border-radius: 20px; }
+.recording-label { color: @ek_danger; font-size: 17px; font-weight: bold; padding: 12px; }
+.hero-title { font-size: 28px; font-weight: bold; }

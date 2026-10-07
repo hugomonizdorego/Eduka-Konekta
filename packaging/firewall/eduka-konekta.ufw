@@ -1,0 +1,4 @@
+[Eduka-Konekta]
+title=Eduka-Konekta school messenger
+description=Peer-to-peer school chat (TCP 45901) and LAN/Wi-Fi discovery (UDP 45900)
+ports=45901/tcp|45900/udp

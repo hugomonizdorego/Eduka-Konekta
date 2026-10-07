@@ -16,6 +16,16 @@ from .models import Profile
 
 MESSAGE_EDIT_WINDOW = 30 * 60
 
+DEFAULT_SETTINGS: dict[str, Any] = {
+    "desktop_notifications": True,
+    "notification_sound": True,
+    "word_filter": True,
+    "filter_words": [],
+    "large_text": False,
+    "appearance": "system",
+    "rules_accepted": {},
+}
+
 
 class Storage:
     def __init__(self, base_dir: Path | None = None):
@@ -32,6 +42,14 @@ class Storage:
         self.identity_path = self.config_dir / "identity.json"
         self.profile_path = self.config_dir / "profile.json"
         self.known_peers_path = self.config_dir / "known-peers.json"
+        self.settings_path = self.config_dir / "settings.json"
+        if base_dir:
+            self.records_dir = base_dir / "records"
+        else:
+            data_root = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
+            self.records_dir = data_root / "eduka-konekta" / "records"
+        self.records_dir.mkdir(parents=True, exist_ok=True)
+        self.settings = self._read_settings()
         self._profile: Profile | None = self._read_profile()
         self._closed = False
         self._lock = threading.RLock()
@@ -68,6 +86,31 @@ class Storage:
         os.chmod(temporary, 0o600)
         temporary.replace(self.profile_path)
 
+    def _read_settings(self) -> dict[str, Any]:
+        settings = json.loads(json.dumps(DEFAULT_SETTINGS))
+        try:
+            data = json.loads(self.settings_path.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                settings.update({key: value for key, value in data.items() if key in DEFAULT_SETTINGS})
+        except (OSError, ValueError, TypeError, json.JSONDecodeError):
+            pass
+        return settings
+
+    def save_settings(self, **changes: Any) -> dict[str, Any]:
+        self.settings.update({key: value for key, value in changes.items() if key in DEFAULT_SETTINGS})
+        temporary = self.settings_path.with_suffix(".tmp")
+        temporary.write_text(json.dumps(self.settings, ensure_ascii=False), encoding="utf-8")
+        os.chmod(temporary, 0o600)
+        temporary.replace(self.settings_path)
+        return self.settings
+
+    def forget_peer_ip(self, ip: str) -> None:
+        values = [value for value in self.known_peer_ips() if value != ip]
+        temporary = self.known_peers_path.with_suffix(".tmp")
+        temporary.write_text(json.dumps(values), encoding="utf-8")
+        os.chmod(temporary, 0o600)
+        temporary.replace(self.known_peers_path)
+
     def known_peer_ips(self) -> list[str]:
         try:
             values = json.loads(self.known_peers_path.read_text(encoding="utf-8"))
@@ -77,6 +120,8 @@ class Storage:
 
     def remember_peer_ip(self, ip: str) -> None:
         values = self.known_peer_ips()
+        if values and values[0] == ip:
+            return
         if ip in values:
             values.remove(ip)
         values.insert(0, ip)

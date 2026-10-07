@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>Eduka-Konekta</short>
+  <description>Eduka-Konekta school messenger: peer-to-peer chat (TCP 45901) and LAN/Wi-Fi discovery (UDP 45900).</description>
+  <port protocol="tcp" port="45901"/>
+  <port protocol="udp" port="45900"/>
+  <destination ipv4="239.192.45.90"/>
+</service>

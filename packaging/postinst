@@ -6,5 +6,25 @@ fi
 if command -v update-desktop-database >/dev/null 2>&1; then
     update-desktop-database -q /usr/share/applications || true
 fi
-exit 0
 
+# Wi-Fi connections are often placed in a stricter firewall zone than wired
+# ones. Open the Eduka-Konekta ports in the common zones. This also works in
+# an image build chroot (for example Cubic), where no firewall daemon runs.
+if [ "$1" = "configure" ]; then
+    if command -v firewall-cmd >/dev/null 2>&1 && firewall-cmd --state >/dev/null 2>&1; then
+        firewall-cmd --reload >/dev/null 2>&1 || true
+        for zone in public home work internal trusted $(firewall-cmd --get-default-zone 2>/dev/null); do
+            firewall-cmd --permanent --zone="$zone" --add-service=eduka-konekta >/dev/null 2>&1 || true
+        done
+        firewall-cmd --reload >/dev/null 2>&1 || true
+    elif command -v firewall-offline-cmd >/dev/null 2>&1; then
+        for zone in public home work internal trusted; do
+            firewall-offline-cmd --zone="$zone" --add-service=eduka-konekta >/dev/null 2>&1 || true
+        done
+    fi
+    if command -v ufw >/dev/null 2>&1; then
+        # Adding a rule does not enable ufw; it only applies when ufw is active.
+        ufw allow Eduka-Konekta >/dev/null 2>&1 || true
+    fi
+fi
+exit 0

@@ -1,0 +1,15 @@
+/* Eduka light: the built-in blue school style. */
+@define-color ek_bg #f3f6fb;
+@define-color ek_surface #ffffff;
+@define-color ek_fg #1c2b3a;
+@define-color ek_text #1c2b3a;
+@define-color ek_muted #5f7285;
+@define-color ek_border #dde5ef;
+@define-color ek_hover #eef4fb;
+@define-color ek_accent #1565c0;
+@define-color ek_accent_fg #ffffff;
+@define-color ek_soft #e7f1fc;
+@define-color ek_own_bubble #dcecff;
+@define-color ek_rail #0f2a4a;
+@define-color ek_rail_fg #ffffff;
+@define-color ek_accent_text #1565c0;
